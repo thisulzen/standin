@@ -17,10 +17,11 @@ from .rules import luhn_digit
 SAMPLE_ROWS = 1000
 MOSTLY = 0.9  # share of non-empty sample values a pattern must match
 
-EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
-CARD = re.compile(r"\b(?:\d[ -]?){11,18}\d\b")
-PHONE = re.compile(r"\+?[\d ()-]{8,}")
-NUMBER = re.compile(r"[-+]?\d[\d,]*(\.\d+)?")
+# ASCII, so \d means 0 to 9 here as it does in the card and token rules.
+EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+", re.ASCII)
+CARD = re.compile(r"\b(?:\d[ -]?){11,18}\d\b", re.ASCII)
+PHONE = re.compile(r"\+?[\d ()-]{8,}", re.ASCII)
+NUMBER = re.compile(r"[-+]?\d[\d,]*(\.\d+)?", re.ASCII)
 DATE_FORMATS = ["%Y-%m-%d", "%d/%m/%Y", "%m/%d/%Y", "%Y/%m/%d", "%d-%m-%Y", "%d.%m.%Y", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]
 
 BIRTH = {"dob", "birth", "birthday", "birthdate", "born"}

@@ -1,5 +1,4 @@
 import tomllib
-from pathlib import Path
 
 from standin.csvfile import Format
 from standin.rules import load
@@ -82,3 +81,9 @@ def test_when_files_disagree_the_stricter_guess_wins(tmp_path):
     a = write_csv(tmp_path / "a.csv", ["code"], [["X"]] * 40 + [["Y"]] * 40)
     b = write_csv(tmp_path / "b.csv", ["code"], [[f"free text {i}"] for i in range(80)])
     assert tomllib.loads(scan([a, b], [UTF8, UTF8]))["code"] == "blank"
+
+
+def test_numbers_in_other_digits_are_blanked():
+    # card and token only replace 0 to 9, so either would leave these readable.
+    arabic_indic = "٤١١١١١١١١١١١١١١١"
+    assert rule_of("col7", [arabic_indic] * 10) == "blank"
