@@ -188,15 +188,15 @@ Masking takes memory that doesn't grow with the file. Almost all its time goes o
 
 ## What's tested
 
-87 tests, `python -m pytest`:
+91 tests, `python -m pytest`:
 
 - `test_shape.py`: the permutation is one to one on every domain size tried (including sizes either side of a perfect square, where cycle walking works hardest), it depends on the key and the tweak, it keeps length, case and punctuation, and changing the last letter of a 300-letter value changes the whole stand-in.
 - `test_rules.py`: every rule, every way a rules file can be wrong, columns with no rule, 2,000 cards with no repeated stand-in, Luhn digits against published test numbers, `by` keeping a customer's gaps, error messages that don't quote values, and names never coming back as themselves.
-- `test_csvfile.py`: every delimiter, a quoted header containing delimiters, CRLF and byte order marks coming back exactly, UTF-16 from Excel, cp1252, an unclosed quote, ragged rows, blank lines, a 1 MB cell, never overwriting, and the exFAT fallback.
+- `test_csvfile.py`: every delimiter, a quoted header containing delimiters, CRLF and byte order marks coming back exactly, UTF-16 from Excel, cp1252, a tab typed as `\t`, an unclosed quote, ragged rows, blank lines, a 1 MB cell, never overwriting, and the exFAT fallback.
 - `test_scan.py` and `test_check.py`: guesses for a synthetic bank extract, column names TOML finds awkward, the stricter guess winning, and each kind of leak `check` reports.
 - `test_cli.py`: two files masked together still join and pass `check`; the same key gives byte-identical output; a bad row in the second file publishes neither; a full disk, Ctrl-C and a real `SIGINT` halfway through 200,000 rows all leave no files behind.
 
-To check the tests could fail, I broke the code on purpose in 23 ways (Luhn digit not recomputed, zero-day date shifts, loose CSV quoting, a publish that overwrites, temporary files left behind, and so on). Each one made a test fail. One got through at first: `check` could stop looking for masked values in kept columns without any test noticing. `test_check.py` now covers it.
+To check the tests could fail, I broke the code on purpose in 37 ways (Luhn digit not recomputed, zero-day date shifts, loose CSV quoting, a publish that overwrites, temporary files left behind, and so on), one at a time. The final suite catches all 37. One got through when I first tried it: `check` could stop looking for masked values in kept columns without any test noticing, so `test_check.py` covers that now.
 
 On top of the tests, I masked onto a real exFAT disk image, where `os.link` fails with "Operation not supported", and the fallback published the file whole and refused to replace it. I also ran the million-row files above through `mask` and `check`.
 
