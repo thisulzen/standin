@@ -2,9 +2,9 @@
 
 Input files are only opened for reading. Output goes to a hidden temporary file
 beside its destination, is flushed to disk, and only then is linked into place,
-and the link fails rather than replace a file that's already there. A run that
-is stopped, crashes or meets a bad row therefore leaves either the complete
-output or nothing, and never touches a file it didn't create.
+and linking fails if a file of that name is already there. A run that is
+stopped, crashes or meets a bad row therefore leaves either the complete output
+or nothing, and never touches a file it didn't create.
 
 Real exports come in more than one flavour, so the encoding (UTF-8, with or
 without a byte order mark, or UTF-16), the delimiter and the line ending are

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "standin"
 version = "1.0.0"
-description = "Mask personal data in CSV extracts with keyed stand-ins that keep their shape, so joins still work and nothing real leaves."
+description = "Masks personal data in CSV extracts with keyed stand-ins of the same shape, so the masked files still join."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.11"

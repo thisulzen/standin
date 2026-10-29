@@ -1,9 +1,9 @@
 """The rules file, and what each rule does to a cell.
 
 A rules file names every column and what to do with it. A column with no rule
-stops the run instead of passing through, because the dangerous mistake is the
-column someone adds to an export next month, and it should fail loudly rather
-than leak quietly. One rule covers a column name in every file, which is what
+stops the run instead of passing through. The dangerous mistake is the column
+someone adds to an export next month, and this way the first run after it
+appears fails. One rule covers a column name in every file, which is what
 keeps a customer ID the same stand-in in customers.csv and transactions.csv.
 
 Every rule leaves an empty cell empty. Every keyed rule is a pure function of

@@ -74,7 +74,7 @@ transactions.csv -> ../masked/transactions.csv (8 rows)
 OK: 5 rows compared, nothing from the masked columns of customers.csv found in ../masked/customers.csv
 ```
 
-Your output will differ from the table above, because your key is different.
+Your stand-ins will differ from the rows at the top, because your key is different.
 
 For your own data, start with `standin scan`. It reads the header and the first 1,000 rows of each file and writes a rules file with a reason beside every guess:
 
@@ -84,7 +84,7 @@ card_number = "card"    # values look like card numbers (they pass the Luhn chec
 status = "blank"        # nothing recognised, so blanked to be safe. Change it to keep if it isn't personal
 ```
 
-They are guesses. Read every line before you use it. A column scan can't place is blanked, so a rules file used unread errs towards losing a column, not leaking one.
+They are guesses, so read every line before you use it. A column scan can't place is blanked. If someone does use the file unread, the worst that happens is an empty column.
 
 ## The rules file
 
@@ -115,7 +115,7 @@ A few things apply to every rule:
 - An empty cell stays empty.
 - One rule covers a column name in every file, which is what keeps `customer_id` the same stand-in everywhere. If two files use one name for different things, give it the stricter rule.
 - A column name with spaces, dots or anything but letters, digits, `_` and `-` goes in quotes, as `"Date opened"` does above.
-- A column that's in a file but not in the rules stops the run, before anything is written. That's deliberate: the risky column is the one someone adds to the export next month, and it should fail loudly instead of leaking quietly.
+- A column that's in a file but not in the rules stops the run, before anything is written. That's deliberate. The column most likely to leak is the one someone adds to the export next month, and this way the first run after it appears fails.
 - `token` stops on a value with letters or digits outside A to Z and 0 to 9 (`Zoë`, `王小明`), because it can't replace them and would leave them readable. Use `name` or `blank` for those columns.
 
 Error messages name the file, the line and the column, but never the value, so nothing personal lands in a terminal or a CI log.
@@ -146,7 +146,7 @@ A hash looks like the obvious way to make a stand-in, but a hash cut down to the
 
 So `token` is a permutation, the same construction as NIST's format-preserving encryption mode FF1. The letters and digits of a value are read as one number (base 10 for each digit, 26 for each letter), the number goes through a 10-round Feistel network keyed by your key, and the result is written back in the same pattern. A Feistel network is a permutation whatever its round function is, so two inputs can't share an output. When the network's square domain is bigger than the value's, the result is fed back in until it lands inside, which is called cycle walking and still gives a permutation. Punctuation and the pattern of letters and digits go into the round function as a tweak, so `AB-12` and `AB/12` are permuted independently.
 
-The round function is keyed BLAKE2b. FF1 uses AES, and the standard library has none. So this isn't FF1 and hasn't been reviewed as a cipher. It's meant for masking test data, not for encrypting anything. It also costs something: anyone with the key can run it backwards, and in a dense ID space a stand-in is often another real customer's ID (`C000123` might become `C004567`, which belongs to someone else in the original). That's a meaningless pairing, not a leak, but don't load masked and real data into one database and assume the two sets of IDs can't meet.
+The round function is keyed BLAKE2b. FF1 uses AES, and the standard library has none. So this isn't FF1, and nobody has reviewed it as a cipher. It's for masking test data. Don't use it to encrypt anything. The design also costs something: anyone with the key can run it backwards, and in a dense ID space a stand-in is often another real customer's ID (`C000123` might become `C004567`, which belongs to someone else in the original). The pairing means nothing and gives nothing away. Still, don't load masked and real data into one database and assume the two sets of IDs can't meet.
 
 Short values get little protection. A two-digit code has 100 possible tokens, and a permutation that small can leave a value unchanged by chance, which `check` will report.
 
@@ -154,13 +154,13 @@ Short values get little protection. A two-digit code has 100 possible tokens, an
 
 Moving every date by a random amount would hide the most, but it would also break every interval: a customer's account would close before it opened. With `by = "customer_id"`, all of one customer's dates move by the same keyed amount, so intervals and ages stay true to within the shift. The cost is that anyone who knows one real date for a customer can work out that customer's shift, and from it all their other dates.
 
-### Nothing half-written, nothing overwritten
+### How output is written
 
-Input files are only ever opened for reading. Output goes to a hidden temporary file beside its destination, is flushed to disk with `fsync`, and is then hard-linked into place. A hard link fails rather than replace an existing file, so there's no window in which standin could clobber one. exFAT, FAT32 and some network shares have no hard links, and there standin claims the name with `O_EXCL` first, then renames over its own empty claim.
+Input files are only ever opened for reading. Output goes to a hidden temporary file beside its destination, is flushed to disk with `fsync`, and is then hard-linked into place. Making a hard link fails if the name is already taken, so standin can't clobber a file, even one that appears while it runs. exFAT, FAT32 and some network shares have no hard links, and there standin claims the name with `O_EXCL` first, then renames over its own empty claim.
 
 When you mask several files at once, every file is written before any is published, so a bad row in the third file doesn't leave two masked files that look like a complete set. Stopping it with Ctrl-C has the same effect.
 
-### Stopping instead of guessing
+### Where it stops
 
 Besides unknown columns, standin stops on:
 
@@ -172,7 +172,7 @@ Each message says what to change.
 
 ### What masking can't do
 
-Masked data is pseudonymised, not anonymous. With the key, it can be linked back. Without the key, people can sometimes still be picked out from what you kept: a rare combination of postcode, birth year and balance can be enough. Free text can hold anything, so blank it. Treat masked extracts with the care your privacy obligations ask for, and decide what to keep with that in mind.
+Masked data is pseudonymised, which is a weaker thing than anonymous. With the key, it can be linked back. Without the key, people can sometimes still be picked out from what you kept: a rare combination of postcode, birth year and balance can be enough. Free text can hold anything, so blank it. Treat masked extracts with the care your privacy obligations ask for, and decide what to keep with that in mind.
 
 ## Performance
 
@@ -206,7 +206,7 @@ On top of the tests, I masked onto a real exFAT disk image, where `os.link` fail
 - The fake-name lists hold common real names, so now and then a customer drew their own name. `check` caught it in one run of sixty. `name` now draws again when that happens.
 - `scan` read ISO dates such as `2025-07-01` as phone numbers (eight digits and some dashes) and would have tokenised them. It tests for dates first now.
 - The first round function was HMAC-SHA256, which took 425 seconds for the million customers. Keyed BLAKE2b is six times faster per call on this machine, and the same run took 190 seconds.
-- On Windows, `standin scan > rules.toml` would have written the file in the ANSI code page, and PowerShell 5 writes redirected output as UTF-16. Either would break a non-English column name. Output is now always UTF-8, and rules files load as UTF-8 with or without a byte order mark, or as UTF-16. I found this by reading the code, not on a Windows machine.
+- On Windows, `standin scan > rules.toml` would have written the file in the ANSI code page, and PowerShell 5 writes redirected output as UTF-16. Either would break a non-English column name. Output is now always UTF-8, and rules files load as UTF-8 with or without a byte order mark, or as UTF-16. I found this by reading the code and haven't seen it happen on a Windows machine.
 
 ## Not done
 

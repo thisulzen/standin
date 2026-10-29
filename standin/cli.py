@@ -116,7 +116,7 @@ def mask(args: argparse.Namespace) -> int:
     if dupes := [n for n, c in names.items() if c > 1]:
         raise Problem(f"more than one input is called {dupes[0]}, and they'd all be written to {args.out / dupes[0]}")
     # Everything that can be checked before reading data is checked first, so a
-    # mistake shows up in a second rather than an hour into a big file.
+    # mistake in the rules shows up at once, even on a file that takes an hour.
     formats = [sniff(p, args.encoding, args.delimiter) for p in args.files]
     for p, fmt in zip(args.files, formats):
         header, _ = table(p, fmt)

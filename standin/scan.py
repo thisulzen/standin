@@ -2,8 +2,8 @@
 
 The guesses come from the header and the first rows of values, and each one is
 written with its reason beside it, because the file is meant to be read and
-corrected before anyone relies on it. A column it can't place is blanked, so a
-rules file used unread errs towards losing a column rather than leaking one.
+corrected before anyone relies on it. A column it can't place is blanked, so if
+someone uses the file unread, the worst that happens is an empty column.
 """
 
 import json
