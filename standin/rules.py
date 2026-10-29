@@ -11,7 +11,6 @@ the key and the original values, so the same key gives the same output on every
 run, on every machine.
 """
 
-import hmac
 import string
 import tomllib
 from datetime import datetime, timedelta
@@ -21,7 +20,7 @@ from pathlib import Path
 from typing import Callable
 
 from . import Problem
-from .shape import permute, restyle
+from .shape import permute, prf, restyle
 
 OPTIONS = {
     "keep": set(),
@@ -208,7 +207,7 @@ def _date(key: bytes, fmt: str, days: int, by: int | None) -> Cell:
         # Keyed on the "by" column when there is one, so all of one customer's
         # dates move together and the gaps between them are kept.
         seed = row[by] if by is not None else cell
-        h = int.from_bytes(hmac.digest(key, b"date\0" + seed.encode(), "sha256")[:8], "big") % (2 * days)
+        h = int.from_bytes(prf(key, b"date\0" + seed.encode())[:8], "big") % (2 * days)
         shift = h - days if h < days else h - days + 1  # never zero, so every date moves
         try:
             return (when + timedelta(days=shift)).strftime(fmt)
@@ -222,10 +221,10 @@ def _name(key: bytes) -> Cell:
     def name(cell: str, row: list[str]) -> str:
         words = cell.split()
         for attempt in count():
-            digest = hmac.digest(key, b"name\0" + attempt.to_bytes(4, "big") + cell.encode(), "sha256")
+            digest = prf(key, b"name\0" + attempt.to_bytes(4, "big") + cell.encode())
             out = []
             for i in range(len(words)):
-                pick = int.from_bytes(digest[2 * i % 32 : 2 * i % 32 + 2], "big")
+                pick = int.from_bytes(digest[2 * i % 64 : 2 * i % 64 + 2], "big")
                 pool = SURNAMES if i == len(words) - 1 and len(words) > 1 else FIRST_NAMES
                 out.append(pool[pick % len(pool)])
             fake = " ".join(out)
