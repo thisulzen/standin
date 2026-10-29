@@ -19,6 +19,9 @@ PROGRESS_EVERY = 100_000  # rows between progress updates on a terminal
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Rules files are UTF-8, and on Windows a redirected stdout would
+    # otherwise use the ANSI code page and mangle non-English column names.
+    sys.stdout.reconfigure(encoding="utf-8")
     args = parser().parse_args(argv)
     try:
         return args.run(args)

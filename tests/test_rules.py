@@ -58,6 +58,12 @@ def test_load_refuses_bad_rules_files_with_a_way_forward(tmp_path, text, message
         load(write_rules(tmp_path, text))
 
 
+def test_load_reads_rules_saved_by_notepad_or_powershell(tmp_path):
+    for encoding in ["utf-8-sig", "utf-16"]:
+        (tmp_path / "rules.toml").write_bytes('"名前" = "name"\n'.encode(encoding))
+        assert load(tmp_path / "rules.toml") == {"名前": {"rule": "name"}}
+
+
 def test_load_reports_a_missing_rules_file(tmp_path):
     with pytest.raises(Problem, match="can't read the rules file"):
         load(tmp_path / "nope.toml")

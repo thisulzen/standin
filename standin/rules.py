@@ -11,6 +11,7 @@ the key and the original values, so the same key gives the same output on every
 run, on every machine.
 """
 
+import codecs
 import string
 import tomllib
 from datetime import datetime, timedelta
@@ -49,7 +50,10 @@ def load(path: Path) -> dict[str, dict]:
     Raises Problem for anything wrong with the file, before any data is read.
     """
     try:
-        raw = tomllib.loads(path.read_text(encoding="utf-8"))
+        data = path.read_bytes()
+        # Notepad may add a byte order mark, and PowerShell 5's > writes UTF-16.
+        text = data.decode("utf-16") if data.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)) else data.decode("utf-8-sig")
+        raw = tomllib.loads(text)
     except OSError as e:
         raise Problem(f"can't read the rules file {path}: {e.strerror}") from None
     except (tomllib.TOMLDecodeError, UnicodeDecodeError) as e:
