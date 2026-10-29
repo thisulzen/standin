@@ -89,12 +89,13 @@ def guess(header: str, values: list[str]) -> tuple[str | dict, str]:
         return token("header looks like an identifier, contact detail or address")
     if w & AMOUNT:
         return "keep", "header looks like an amount"
+    # Dates before phone numbers, because 2025-07-01 is eight digits and dashes.
+    if fmt := date_format(values):
+        return "keep", f"values are dates ({fmt}). Use date instead if when something happened could identify someone"
     if mostly(lambda v: PHONE.fullmatch(v) and sum(c.isdigit() for c in v) >= 8):
         return token("values look like phone numbers")
     if mostly(lambda v: v.isdigit() and len(v) >= 6):
         return token("values are long numbers, which are usually identifiers")
-    if fmt := date_format(values):
-        return "keep", f"values are dates ({fmt}). Use date instead if when something happened could identify someone"
     if mostly(NUMBER.fullmatch):
         return "keep", "values are numbers"
     if len(set(values)) <= min(20, len(values) // 5):
@@ -116,7 +117,7 @@ def scan(paths: list[Path], formats: list[Format], rows: int = SAMPLE_ROWS) -> s
             rule, reason = guess(column, [row[i] for row in sample])
             old = guesses.get(column)
             if old is None or STRICTNESS[_name(rule)] > STRICTNESS[_name(old[0])]:
-                guesses[column] = (rule, f"{reason} ({path.name})" if len(paths) > 1 else reason)
+                guesses[column] = (rule, f"{reason}, in {path.name}" if len(paths) > 1 else reason)
 
     lines = [
         f"# Rules suggested by standin scan from {', '.join(p.name for p in paths)}, first {rows:,} rows of each.",

@@ -41,6 +41,7 @@ def test_values_decide_when_the_header_says_nothing():
     assert rule_of("col7", ["4111111111111111"] * 10) == "card"
     assert rule_of("col7", ["0412 345 678", "(02) 9876 5432"] * 10) == "token"
     assert rule_of("col7", ["31/12/2020", "01/02/2021"] * 10) == "keep"
+    assert rule_of("posted", ["2025-07-01", "2025-12-31"] * 10) == "keep"  # not a phone number
     assert rule_of("col7", ["12.50", "-3", "1,200.00"] * 10) == "keep"
     assert rule_of("col7", ["Corner Grocer", "Metro Transit"] * 30) == "keep"
 
