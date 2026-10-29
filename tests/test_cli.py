@@ -115,6 +115,17 @@ def test_a_full_disk_leaves_nothing_behind(tmp_path, monkeypatch, capsys):
     assert os.listdir(tmp_path / "out") == []
 
 
+def test_two_inputs_with_one_name_are_refused(tmp_path, capsys):
+    # Both would be written to out/customers.csv, so one would be lost.
+    cust, _, rules, key = extract(tmp_path, 5, 0)
+    other = tmp_path / "other"
+    other.mkdir()
+    write_csv(other / "customers.csv", CUSTOMER_HEADER, customers(5, seed=9))
+    assert run_mask(rules, key, tmp_path / "out", cust, other / "customers.csv") == 2
+    assert "same file name" in capsys.readouterr().err
+    assert not (tmp_path / "out").exists()
+
+
 def test_out_must_be_a_folder_and_rows_must_be_positive(tmp_path, capsys):
     cust, _, rules, key = extract(tmp_path, 5, 0)
     out = tmp_path / "out"
