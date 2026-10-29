@@ -32,7 +32,6 @@ OPTIONS = {
     "name": set(),
     "date": {"by", "days", "format"},
 }
-RULE_LIST = "keep, drop, blank, token, card, date and name"
 DEFAULT_DATE_FORMAT = "%Y-%m-%d"
 DEFAULT_DAYS = 30
 CACHE_SIZE = 1 << 16  # repeated IDs (a customer on every transaction) are worked out once
@@ -71,7 +70,7 @@ def load(path: Path) -> dict[str, dict]:
             raise Problem(f"{where} has no rule. A column name with dots, spaces or brackets needs quotes: \"{column}.x\" = \"token\"")
         rule = spec["rule"]
         if rule not in OPTIONS:
-            raise Problem(f"{where} has the rule {rule!r}. The rules are {RULE_LIST}")
+            raise Problem(f"{where} has the rule {rule!r}. The rules are {', '.join(OPTIONS)}")
         unknown = set(spec) - {"rule"} - OPTIONS[rule]
         if unknown:
             raise Problem(f"{where}: {rule} has no option {', '.join(sorted(unknown))}")

@@ -112,9 +112,8 @@ def suggest(args: argparse.Namespace) -> int:
 def mask(args: argparse.Namespace) -> int:
     rules = load(args.rules)
     key = load_key(args.key)
-    names = Counter(p.name for p in args.files)
-    if dupes := [n for n, c in names.items() if c > 1]:
-        raise Problem(f"more than one input is called {dupes[0]}, and they'd all be written to {args.out / dupes[0]}")
+    if len({p.name for p in args.files}) < len(args.files):
+        raise Problem(f"two inputs have the same file name, and both would be written to the same place in {args.out}")
     # Everything that can be checked before reading data is checked first, so a
     # mistake in the rules shows up at once, even on a file that takes an hour.
     formats = [sniff(p, args.encoding, args.delimiter) for p in args.files]

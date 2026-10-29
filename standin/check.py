@@ -9,6 +9,7 @@ card number. It needs the rules file, to know which columns were meant to be
 masked, but not the key.
 """
 
+from collections import defaultdict
 from itertools import zip_longest
 from pathlib import Path
 
@@ -38,8 +39,8 @@ def check(rules: dict[str, dict], original: Path, masked: Path, fmt_o: Format, f
         raise Problem(f"{masked}'s columns aren't what these rules make of {original}: expected {expected}, found {head_m}")
 
     kinds = {c: rules[c]["rule"] for c in expected}
-    where = {i: head_o.index(c) for i, c in enumerate(expected)}
-    found: dict[tuple[str, str], list[int]] = {}
+    where = [head_o.index(c) for c in expected]
+    found: dict[tuple[str, str], list[int]] = defaultdict(list)
     sensitive = set()  # ponytail: every distinct masked value in memory, about 500 MB per million customers here; an on-disk sorted set if extracts outgrow RAM
     count = 0
     for pair in zip_longest(rows_o, rows_m):
@@ -59,11 +60,11 @@ def check(rules: dict[str, dict], original: Path, masked: Path, fmt_o: Format, f
                     sensitive.add(before)
                 # A cell with no letters or digits (a lone "-") has nothing to mask.
                 if cell == before and any(c.isalnum() for c in cell):
-                    found.setdefault((expected[i], "unchanged from the original"), []).append(line)
+                    found[expected[i], "unchanged from the original"].append(line)
             elif rule == "blank" and cell:
-                found.setdefault((expected[i], "not blank"), []).append(line)
+                found[expected[i], "not blank"].append(line)
             elif rule == "keep" and cell != before:
-                found.setdefault((expected[i], "meant to be kept but different from the original"), []).append(line)
+                found[expected[i], "meant to be kept but different from the original"].append(line)
 
     # A second pass, because a kept cell can only be tested against the masked
     # values once all of them have been seen.
@@ -73,11 +74,11 @@ def check(rules: dict[str, dict], original: Path, masked: Path, fmt_o: Format, f
         for i in kept:
             cell = row[i]
             if cell in sensitive:
-                found.setdefault((expected[i], "holding a value from a masked column of the original"), []).append(line)
+                found[expected[i], "holding a value from a masked column of the original"].append(line)
             if EMAIL.search(cell):
-                found.setdefault((expected[i], "with something that looks like an email address"), []).append(line)
+                found[expected[i], "with something that looks like an email address"].append(line)
             if any(is_card(m.group()) for m in CARD.finditer(cell)):
-                found.setdefault((expected[i], "with something that looks like a card number"), []).append(line)
+                found[expected[i], "with something that looks like a card number"].append(line)
 
     findings = []
     for (column, what), lines in found.items():

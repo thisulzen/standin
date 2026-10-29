@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "standin"
-version = "1.0.0"
+dynamic = ["version"]
 description = "Masks personal data in CSV extracts with keyed stand-ins of the same shape, so the masked files still join."
 readme = "README.md"
 license = "MIT"
@@ -16,6 +16,9 @@ standin = "standin.cli:main"
 
 [tool.setuptools]
 packages = ["standin"]
+
+[tool.setuptools.dynamic]
+version = { attr = "standin.__version__" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
