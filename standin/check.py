@@ -40,7 +40,7 @@ def check(rules: dict[str, dict], original: Path, masked: Path, fmt_o: Format, f
     kinds = {c: rules[c]["rule"] for c in expected}
     where = {i: head_o.index(c) for i, c in enumerate(expected)}
     found: dict[tuple[str, str], list[int]] = {}
-    sensitive = set()  # ponytail: every distinct masked value in memory; a sorted on-disk set if extracts outgrow RAM
+    sensitive = set()  # ponytail: every distinct masked value in memory, about 500 MB per million customers here; an on-disk sorted set if extracts outgrow RAM
     count = 0
     for pair in zip_longest(rows_o, rows_m):
         if None in pair:
@@ -53,7 +53,9 @@ def check(rules: dict[str, dict], original: Path, masked: Path, fmt_o: Format, f
             before = row_o[where[i]]
             rule = kinds[expected[i]]
             if rule in MASKED:
-                if len(before) >= MIN_LEAK_LENGTH:
+                # Dates are left out: a kept date column (when an account
+                # was opened) matches someone's real birthday all the time.
+                if rule != "date" and len(before) >= MIN_LEAK_LENGTH:
                     sensitive.add(before)
                 # A cell with no letters or digits (a lone "-") has nothing to mask.
                 if cell == before and any(c.isalnum() for c in cell):

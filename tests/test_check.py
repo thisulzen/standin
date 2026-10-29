@@ -59,3 +59,10 @@ def test_files_that_cant_be_compared_are_a_problem(tmp_path):
         compare(tmp_path, [["C1", "a@b.co", "", "", ""]], [["K1", "q@w.er", "", "", "1"]], header=HEADER)
     with pytest.raises(Problem, match="has 2 rows but .* has 1"):
         compare(tmp_path, [["C1", "a@b.co", "", "", ""]] * 2, [["K1", "q@w.er", "", ""]])
+
+
+def test_a_kept_date_matching_a_masked_one_is_not_a_leak(tmp_path):
+    rules = {"dob": {"rule": "date"}, "opened": {"rule": "keep"}}
+    a = write_csv(tmp_path / "a.csv", ["dob", "opened"], [["1990-01-01", "2020-05-05"], ["2020-05-05", "2021-01-01"]])
+    b = write_csv(tmp_path / "b.csv", ["dob", "opened"], [["1990-01-09", "2020-05-05"], ["2020-04-30", "2021-01-01"]])
+    assert check(rules, a, b, UTF8, UTF8)[1] == []
