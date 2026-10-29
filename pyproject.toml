@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "standin"
+version = "1.0.0"
+description = "Mask personal data in CSV extracts with keyed stand-ins that keep their shape, so joins still work and nothing real leaves."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [{ name = "Thisul Deven" }]
+
+[project.scripts]
+standin = "standin.cli:main"
+
+[tool.setuptools]
+packages = ["standin"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
