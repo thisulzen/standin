@@ -1,0 +1,9 @@
+txn_id,customer_id,posted,amount,merchant,status
+T00000001,C000101,2025-07-01,-45.20,Corner Grocer,posted
+T00000002,C000101,2025-07-03,-3.50,Metro Transit,posted
+T00000003,C000102,2025-07-03,1200.00,Payroll,posted
+T00000004,C000103,2025-07-04,-89.99,Online Books,pending
+T00000005,C000104,2025-07-05,-60.00,Fuel Stop,posted
+T00000006,C000101,2025-07-09,-12.80,Corner Grocer,posted
+T00000007,C000105,2025-07-10,2500.00,Payroll,posted
+T00000008,C000103,2025-07-12,-4.10,Metro Transit,posted

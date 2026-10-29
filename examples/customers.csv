@@ -1,0 +1,6 @@
+customer_id,full_name,email,phone,date_of_birth,card_number,balance,notes,status
+C000101,Jane Citizen,jane.citizen@example.com,+61 412 345 678,1987-03-04,4111 1111 1111 1111,1520.40,Called about card fees,active
+C000102,Zoë Fontaine,zoe.fontaine@example.org,(02) 9876 5432,1990-11-30,5555 5555 5555 4444,-20.00,,closed
+C000103,王小明,xiaoming.wang@example.net,0423 111 222,1975-06-15,3782 822463 10005,98000.00,Prefers Mandarin,active
+C000104,Liam O'Connor-Hayes,liam.oh@example.com,+61 400 000 123,2001-01-01,6011 1111 1111 1117,310.75,"Moved to Perth, new address pending",dormant
+C000105,Priya Raman,priya.r@example.com,0499 876 543,1968-09-21,4012 8888 8888 1881,12.00,,active

@@ -1,0 +1,20 @@
+# One line per column, in every file it appears in. A column with no rule stops
+# the run, so a column added to the export later can't slip through unmasked.
+
+customer_id = "token"      # same length and pattern, never two the same, so joins still work
+full_name = "name"         # a fake name, in any script
+email = "token"
+phone = "token"
+card_number = "card"       # keeps the first six digits and still passes the Luhn check
+notes = "blank"            # free text can hold anything
+balance = "keep"
+status = "keep"
+
+# Every date of one customer moves by the same number of days, so the gaps
+# between them stay true. Birth dates move by up to 180 days, others by up to 30.
+date_of_birth = { rule = "date", by = "customer_id", days = 180 }
+posted = { rule = "date", by = "customer_id" }
+
+txn_id = "token"
+amount = "keep"
+merchant = "keep"
