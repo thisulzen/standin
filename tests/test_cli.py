@@ -90,7 +90,7 @@ def test_a_bad_cell_in_the_second_file_publishes_neither(tmp_path, capsys):
     out = tmp_path / "out"
     assert run_mask(rules, key, out, cust, txns) == 2
     err = capsys.readouterr().err
-    assert f"line 51: column \"posted\" isn't a date in the format %Y-%m-%d" in err
+    assert "line 51: column \"posted\" isn't a date in the format %Y-%m-%d" in err
     assert "31/12/2025" not in err
     assert os.listdir(out) == []
 
@@ -113,6 +113,17 @@ def test_a_full_disk_leaves_nothing_behind(tmp_path, monkeypatch, capsys):
     assert run_mask(rules, key, tmp_path / "out", cust) == 2
     assert os.strerror(errno.ENOSPC) in capsys.readouterr().err
     assert os.listdir(tmp_path / "out") == []
+
+
+def test_out_must_be_a_folder_and_rows_must_be_positive(tmp_path, capsys):
+    cust, _, rules, key = extract(tmp_path, 5, 0)
+    out = tmp_path / "out"
+    out.write_text("precious")
+    assert run_mask(rules, key, out, cust) == 2
+    assert "--out needs a folder" in capsys.readouterr().err
+    assert out.read_text() == "precious"
+    assert main(["scan", "--rows", "0", str(cust)]) == 2
+    assert "--rows must be at least 1" in capsys.readouterr().err
 
 
 def test_keygen_never_replaces_a_key(tmp_path, capsys):

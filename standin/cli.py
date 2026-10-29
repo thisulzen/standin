@@ -104,6 +104,8 @@ def load_key(path: Path) -> bytes:
 
 
 def suggest(args: argparse.Namespace) -> int:
+    if args.rows < 1:
+        raise Problem("--rows must be at least 1")
     formats = [sniff(p, args.encoding, args.delimiter) for p in args.files]
     sys.stdout.write(scan(args.files, formats, args.rows))
     return 0
@@ -120,6 +122,8 @@ def mask(args: argparse.Namespace) -> int:
     for p, fmt in zip(args.files, formats):
         header, _ = table(p, fmt)
         plan(rules, header, key, str(p))
+    if args.out.exists() and not args.out.is_dir():
+        raise Problem(f"{args.out} is a file. --out needs a folder, which standin creates if it isn't there")
     dests = [args.out / p.name for p in args.files]
     for d in dests:
         if os.path.lexists(d):

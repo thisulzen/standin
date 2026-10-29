@@ -63,7 +63,9 @@ def sniff(path: Path, encoding: str | None = None, delimiter: str | None = None)
     if delimiter is None:
         bare = re.sub(r'"[^"]*"', "", first)  # a quoted header may contain any delimiter
         delimiter = max(DELIMITERS, key=bare.count) if any(d in bare for d in DELIMITERS) else ","
-    elif len(delimiter) != 1:
+    else:
+        delimiter = {"\\t": "\t", "tab": "\t"}.get(delimiter, delimiter)  # what --delimiter '\t' arrives as
+    if len(delimiter) != 1:
         raise Problem(f"the delimiter must be one character, not {delimiter!r}")
     return Format(encoding, delimiter, "\r\n" if first.endswith("\r") else "\n")
 

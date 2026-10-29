@@ -139,3 +139,12 @@ def test_a_failure_while_writing_leaves_nothing_behind(tmp_path):
     with pytest.raises(Problem):
         write(tmp_path / "out.csv", UTF8, rows())
     assert os.listdir(tmp_path) == []
+
+
+def test_a_tab_delimiter_can_be_typed_the_way_people_type_it(tmp_path):
+    (tmp_path / "in.csv").write_text("a\tb\n1\t2\n")
+    # A shell passes '\t' through as a backslash and a t.
+    assert sniff(tmp_path / "in.csv", delimiter="\\t").delimiter == "\t"
+    assert sniff(tmp_path / "in.csv", delimiter="tab").delimiter == "\t"
+    with pytest.raises(Problem, match="one character"):
+        sniff(tmp_path / "in.csv", delimiter=";;")
