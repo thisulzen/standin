@@ -169,3 +169,10 @@ def test_name_gives_fake_names_of_the_same_length_in_words():
     assert len(out[2].split()) == 3
     assert out[3] == out[3].upper()
     assert out[0] == out[4]
+
+
+def test_name_never_hands_someone_their_own_name():
+    # The fake-name lists hold common real names, so without a redraw some
+    # customers would come out under their own name.
+    names = [f"{f} {s}" for f in FIRST_NAMES[:30] for s in SURNAMES[:30]] + list(FIRST_NAMES)
+    assert all(a.casefold() != b.casefold() for a, b in zip(names, mask_one({"rule": "name"}, names)))

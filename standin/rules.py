@@ -16,6 +16,7 @@ import string
 import tomllib
 from datetime import datetime, timedelta
 from functools import lru_cache
+from itertools import count
 from pathlib import Path
 from typing import Callable
 
@@ -220,14 +221,18 @@ def _date(key: bytes, fmt: str, days: int, by: int | None) -> Cell:
 def _name(key: bytes) -> Cell:
     def name(cell: str, row: list[str]) -> str:
         words = cell.split()
-        digest = hmac.digest(key, b"name\0" + cell.encode(), "sha256")
-        out = []
-        for i in range(len(words)):
-            pick = int.from_bytes(digest[2 * i % 32 : 2 * i % 32 + 2], "big")
-            pool = SURNAMES if i == len(words) - 1 and len(words) > 1 else FIRST_NAMES
-            out.append(pool[pick % len(pool)])
-        fake = " ".join(out)
-        return fake.upper() if cell.isupper() else fake
+        for attempt in count():
+            digest = hmac.digest(key, b"name\0" + attempt.to_bytes(4, "big") + cell.encode(), "sha256")
+            out = []
+            for i in range(len(words)):
+                pick = int.from_bytes(digest[2 * i % 32 : 2 * i % 32 + 2], "big")
+                pool = SURNAMES if i == len(words) - 1 and len(words) > 1 else FIRST_NAMES
+                out.append(pool[pick % len(pool)])
+            fake = " ".join(out)
+            # A real James Smith could draw James Smith. Drawing again costs
+            # nothing, because fake names were never one to one anyway.
+            if fake.casefold() != " ".join(words).casefold():
+                return fake.upper() if cell.isupper() else fake
 
     return name
 
