@@ -14,6 +14,7 @@ run, on every machine.
 import codecs
 import string
 import tomllib
+import warnings
 from datetime import datetime, timedelta
 from functools import lru_cache
 from itertools import count
@@ -93,7 +94,12 @@ def _check_date(spec: dict, where: str) -> None:
     # into 1900 or lose the day, so it's refused here rather than in row one.
     probe = datetime(2001, 2, 3, 4, 5, 6)
     try:
-        ok = isinstance(fmt, str) and datetime.strptime(probe.strftime(fmt), fmt).date() == probe.date()
+        # Python 3.13 warns about parsing a day with no year, which is the very
+        # format this is here to refuse. 3.15 raises or changes the year, and
+        # either way the probe still fails.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", DeprecationWarning)
+            ok = isinstance(fmt, str) and datetime.strptime(probe.strftime(fmt), fmt).date() == probe.date()
     except ValueError:
         ok = False
     if not ok:
